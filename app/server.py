@@ -13,5 +13,5 @@ def start():
 	uvicorn.run(app, host="0.0.0.0", port=8080)
 
 def server_thread():
-	t = Thread(target=start)
+	t = Thread(target=start, daemon=True)
 	t.start()
