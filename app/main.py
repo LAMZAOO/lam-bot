@@ -3,12 +3,16 @@ import os
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
+import traceback
+import time
 
 from app.server import server_thread
 
 # 環境に応じた.envファイルを選択
-env_type = os.getenv("ENV", "local")
-load_dotenv(f".env.{env_type}")
+if os.getenv("ENV", "local") == "production":
+    load_dotenv(".env.production")
+else:
+    load_dotenv(".env.local")
 
 TOKEN = os.getenv("TOKEN")
 PING_URL = os.getenv("PING_URL")
@@ -18,24 +22,21 @@ intents.message_content = True
 intents.voice_states = True
 client = discord.Client(intents=intents)
 
-async def ping_self():
+async def send_ping():
     await client.wait_until_ready()
-    async with aiohttp.ClientSession() as session:
-        while not client.is_closed():
-            if PING_URL:
-                try:
-                    async with session.get(PING_URL) as res:
-                        print(f"[PING] Sent to {PING_URL} | Status: {res.status}")
-                except Exception as e:
-                    print(f"[PING ERROR] {e}")
-            else:
-                print("[PING] No PING_URL set")
-            await asyncio.sleep(180)  # 3分おき
+    while not client.is_closed():
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(PING_URL) as response:
+                    print(f"[PING] Sent to {PING_URL} | Status: {response.status}")
+        except Exception as e:
+            print(f"[PING] Failed: {e}")
+        await asyncio.sleep(180)
 
 @client.event
 async def on_ready():
     print(f"✅ Logged in as {client.user}")
-    client.loop.create_task(ping_self())
+    client.loop.create_task(send_ping())
 
 @client.event
 async def on_message(message):
@@ -44,14 +45,15 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello!')
 
-# Web サーバー起動 (Koyeb維持用)
+# サーバー起動
 server_thread()
 
-# Bot 実行
+# Bot起動（例外をキャッチして原因をログ出力）
+loop = asyncio.get_event_loop()
 try:
-    client.run(TOKEN)
+    loop.run_until_complete(client.start(TOKEN))
 except Exception as e:
-    print(f"[BOT ERROR] {e}")
-    import time
+    print(f"❌ Discord client stopped with error: {e}")
+    traceback.print_exc()
     while True:
         time.sleep(60)
