@@ -1,22 +1,25 @@
 import discord
 import os
-from dotenv import load_dotenv
-load_dotenv()
+import dotenv
 
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print(f'ログインしました: {self.user}')
+from server import server_thread
 
-    async def on_message(self, message):
-        print(f'送信: {message.author}: {message.content}')
-        if message.author == self.user:
-            return
+dotenv.load_dotenv()
 
-        if message.content == '$Hello':
-            await message.channel.send('Hello!')
-
+TOKEN = os.environ.get("TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True
+intents.voice_states = True
+client = discord.Client(intents=intents)
 
-client = MyClient(intents=intents)
-client.run(os.getenv('TOKEN'))
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    if message.content.startswith('$hello'):
+        await message.channel.send('Hello!')
+
+# Koyeb用 サーバー立ち上げ
+server_thread()
+client.run(TOKEN)
