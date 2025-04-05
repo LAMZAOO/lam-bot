@@ -58,8 +58,7 @@ async def on_ready():
         logger.error(f"❌ Sync failed: {e}")
 
 async def load_extensions():
-    await bot.load_extension("app.commands.view_option")
-    await bot.load_extension("app.commands.character_select")
+    await bot.load_extension("app.commands.calc_status")
 
 # サーバー起動
 server_thread()

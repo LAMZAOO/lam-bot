@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Power Boost",
+    "description": "Increases your power."
+  },
+  {
+    "name": "Defense Aura",
+    "description": "Boosts your defense."
+  }
+]
