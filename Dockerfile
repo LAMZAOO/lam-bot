@@ -15,6 +15,8 @@ COPY requirements.txt /bot/
 RUN pip install -r requirements.txt
 COPY . /bot
 
+ENV PYTHONPATH=/bot
+
 # ポート開放 (uvicornで指定したポート)
 EXPOSE 8080
 
