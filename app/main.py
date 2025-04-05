@@ -3,10 +3,13 @@ import os
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
-import traceback
 import time
 
 from app.server import server_thread
+from app.logging_config import setup_logger
+
+# ロガー初期化
+logger = setup_logger(__name__)
 
 # 環境に応じた.envファイルを選択
 if os.getenv("ENV", "local") == "production":
@@ -28,14 +31,14 @@ async def send_ping():
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(PING_URL) as response:
-                    print(f"[PING] Sent to {PING_URL} | Status: {response.status}")
+                    logger.info(f"[PING] Sent to {PING_URL} | Status: {response.status}")
         except Exception as e:
-            print(f"[PING] Failed: {e}")
+            logger.error(f"[PING] Failed: {e}")
         await asyncio.sleep(180)
 
 @client.event
 async def on_ready():
-    print(f"✅ Logged in as {client.user}")
+    logger.info(f"✅ Logged in as {client.user}")
     client.loop.create_task(send_ping())
 
 @client.event
@@ -49,11 +52,12 @@ async def on_message(message):
 server_thread()
 
 # Bot起動（例外をキャッチして原因をログ出力）
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
 try:
     loop.run_until_complete(client.start(TOKEN))
-except Exception as e:
-    print(f"❌ Discord client stopped with error: {e}")
-    traceback.print_exc()
+except Exception:
+    logger.exception("❌ Discord client stopped with error")
     while True:
         time.sleep(60)
