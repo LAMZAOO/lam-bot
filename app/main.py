@@ -2,7 +2,7 @@ import discord
 import os
 import dotenv
 
-from server import server_thread
+from app.server import server_thread
 
 dotenv.load_dotenv()
 
